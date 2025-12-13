@@ -96,7 +96,7 @@ function addPinFromCoordinate(latitude, longitude, user) {
     id: `player-pin-${user}`,
     position: Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
     point: {
-      pixelSize: 15,
+      pixelSize: 30,
       color: Cesium.Color.BLUE.withAlpha(0.8),  // 青色、透明度で淡く
       outlineColor: Cesium.Color.CYAN,  // シアンで光る効果
       outlineWidth: 3
@@ -112,6 +112,49 @@ function addPinFromCoordinate(latitude, longitude, user) {
     }
   });
 }
+
+// イベントデータを処理して赤色のピンを追加する関数
+function addEventPin(event) {
+  const height = 100; // 高さデフォルト 100m
+
+  viewer.entities.add({
+    id: `event-pin-${event.type}-${event.latitude}-${event.longitude}`,
+    position: Cesium.Cartesian3.fromDegrees(event.longitude, event.latitude, height),
+    point: {
+      pixelSize: 24,
+      color: Cesium.Color.RED, // すべて赤色
+      outlineColor: Cesium.Color.DARKRED,
+      outlineWidth: 2
+    },
+    label: {
+      font: "14pt sans-serif",
+      fillColor: Cesium.Color.WHITE,
+      outlineColor: Cesium.Color.BLACK,
+      outlineWidth: 2,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -32)
+    }
+  });
+}
+
+// ページロード時にイベントデータを取得してピンを表示
+fetch('http://localhost:8080/api/v1/events') // /api プレフィックスを使用
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(events => {
+    events.forEach(event => {
+      addEventPin(event);
+    });
+    console.log('イベントピンを' + events.length + '個表示しました。');
+  })
+  .catch(error => {
+    console.error('イベントデータの取得に失敗しました:', error);
+  });
 
 
 </script>

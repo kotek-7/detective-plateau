@@ -20,7 +20,7 @@ const setupRestApiServer = (app: express.Express, io: Server) => {
     }),
   );
 
-  app.use(router);
+  app.use("/api", router);
 
   // WebSocket ブロードキャスト用の座標投稿エンドポイント
   app.post("/api/coordinate", (req, res) => {
