@@ -58,8 +58,10 @@ document.getElementById("locationBtn").addEventListener("click", () => {
   });
 });
 
-// WebSocket 接続（バックエンドのポート 8080 を想定）
-const socket = io('ws://localhost:8080');
+isProduction = window.location.hostname !== "localhost";
+
+// WebSocket 接続
+const socket = io(isProduction ? "https://detective-plateau.onrender.com" : "http://localhost:8080");
 
 // Socket.IO 接続オープン時の処理
 socket.on('connect', () => {
