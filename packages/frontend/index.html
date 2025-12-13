@@ -57,6 +57,36 @@ document.getElementById("locationBtn").addEventListener("click", () => {
   });
 });
 
+// モック: 京都市のプレイヤー座標をピンとして追加（青色、淡く光る）
+const playerCoordinates = [
+  { lat: 35.0116, lng: 135.7681 },  // 京都市役所
+  { lat: 35.0130, lng: 135.7700 },  // 近くの架空位置
+  { lat: 35.0100, lng: 135.7650 },  // 近くの架空位置
+  { lat: 35.0150, lng: 135.7720 }   // 近くの架空位置
+];
+
+playerCoordinates.forEach((coord, index) => {
+  viewer.entities.add({
+    id: `player-pin-${index}`,
+    position: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat, 100),
+    point: {
+      pixelSize: 15,
+      color: Cesium.Color.BLUE.withAlpha(0.8),  // 青色、透明度で淡く
+      outlineColor: Cesium.Color.CYAN,  // シアンで光る効果
+      outlineWidth: 3
+    },
+    label: {
+      text: `プレイヤー ${index + 1}`,
+      font: "10pt sans-serif",
+      fillColor: Cesium.Color.WHITE,
+      outlineColor: Cesium.Color.BLACK,
+      outlineWidth: 1,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -40)
+    }
+  });
+});
+
 
 </script>
 
