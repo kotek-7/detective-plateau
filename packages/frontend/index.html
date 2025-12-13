@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>京都3Dマップ</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.136/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.136/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%; height: 100%; margin: 0; padding: 0;
+    }
+    #locationBtn {
+      position: absolute; top: 10px; left: 10px; z-index: 999;
+      padding: 12px 20px; font-size: 16px; cursor: pointer;
+      background: #4CAF50; color: white;
+      border: none; border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <button id="locationBtn">📍 現在地へ移動</button>
+
+<script type="module">
+
+// ↓ここにトークンを入れる
+
+Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlOTYwOGYyYi0wMDliLTRjZDAtOGM2OS1mMTc1NmQzYWVmMTkiLCJpZCI6MzY4MzE4LCJpYXQiOjE3NjUzNTUzNzF9.YKayycJZGV9IiTrFVygIGF973Au33--MP7LilD2Uoh0";
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrain: Cesium.Terrain.fromWorldTerrain(),
+  timeline: false, animation: false
+});
+
+// 日本の3D建物を追加
+const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2602291);
+viewer.scene.primitives.add(tileset);
+
+// 初期位置：京都市役所
+viewer.camera.setView({
+  destination: Cesium.Cartesian3.fromDegrees(135.7681, 35.0116, 800),
+  orientation: {
+    heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0
+  }
+});
+
+// 現在地ボタン
+document.getElementById("locationBtn").addEventListener("click", () => {
+  navigator.geolocation.getCurrentPosition((pos) => {
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(
+        pos.coords.longitude, pos.coords.latitude, 500
+      ),
+      duration: 2
+    });
+  });
+});
+
+
+</script>
+
+</body>
+
+</html>
