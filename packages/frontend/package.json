@@ -1,0 +1,14 @@
+{
+  "name": "@detective-plateau/frontend",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "run": "serve ."
+  },
+  "dependencies": {
+    "serve": "^14.2.5"
+  }
+}

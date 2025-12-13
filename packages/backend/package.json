@@ -13,7 +13,6 @@
     "generate": "dotenv -e ../../env/.backend.env prisma generate"
   },
   "dependencies": {
-    "@harurobo-2026-score-tool/shared": "workspace:*",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "cors": "^2.8.5",
