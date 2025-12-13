@@ -4,37 +4,39 @@ import helmet from "helmet";
 import { pinoHttp } from "pino-http";
 
 import * as middlewares from "./middleware.js";
-import { env } from "./env.js";
 import router from "./routes/index.js";
 
 import { Server } from "socket.io";
 
 const setupRestApiServer = (app: express.Express, io: Server) => {
+  const allowedOrigins = ["http://localhost:3000"];
+
   app.use(express.json());
   app.use(pinoHttp());
   app.use(helmet());
   app.use(
     cors({
-      origin: env.CORS_ORIGIN,
+      origin: allowedOrigins,
     }),
   );
+
+  app.use(router);
+
+  // WebSocket ブロードキャスト用の座標投稿エンドポイント
+  app.post("/api/coordinate", (req, res) => {
+    io.emit("coordinateReceived", req.body.latitude, req.body.longitude, req.body.user);
+    res.status(204).send();
+  });
+
   app.use(middlewares.notFound);
   app.use(middlewares.errorHandler);
 
-  app.use("/", router);
+  return app;
 };
 
 // Express.js の設定、ルータの登録、socket.io のイベントリスナ登録をする
 export const setupApp = (app: express.Express, io: Server) => {
   setupRestApiServer(app, io);
-
-  io.on("connection", (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
-    socket.on("coordinate", (latitude, longitude) => {
-      console.log(`Received coordinate from ${socket.id}:`, latitude, longitude);
-      socket.emit("coordinateReceived", latitude, longitude);
-    });
-  });
 
   return app;
 };
