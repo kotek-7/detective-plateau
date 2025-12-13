@@ -1,0 +1,6 @@
+{
+  "name": "harurobo-2026-score-tool",
+  "module": "index.ts",
+  "type": "module",
+  "private": true
+}

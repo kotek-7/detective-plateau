@@ -1,0 +1,118 @@
+// @default(nanoid(12)) だと [0-9A-Za-z_-] を使ったIDになるが、バックエンドでは-_を使わないIDを生成する。 default(nanoid(12)) は注釈として書いてある。
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma_client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TeamColor {
+  red
+  blue
+}
+
+enum TimerStatus {
+  running
+  paused
+  stopped
+}
+
+enum GamePhase {
+  setting
+  in_game
+  ended
+}
+
+model Team {
+  id               String   @id @default(nanoid(12))
+  name             String
+  universityAbbrev String   @map("university_abbrev")
+  universityName   String   @map("university_name")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  redGames         Game[]   @relation("RedTeam")
+  blueGames        Game[]   @relation("BlueTeam")
+
+  @@map("teams")
+}
+
+model Game {
+  id             String          @id @default(nanoid(12))
+  winnerColor    TeamColor?      @map("winner_color")
+  note           String          @default("")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  redTeamId      String          @map("red_team_id")
+  blueTeamId     String          @map("blue_team_id")
+  redTeam        Team            @relation("RedTeam", fields: [redTeamId], references: [id], onDelete: Cascade)
+  blueTeam       Team            @relation("BlueTeam", fields: [blueTeamId], references: [id], onDelete: Cascade)
+  scoreFragments ScoreFragment[]
+  leagues        League[]
+  tournaments    Tournament[]
+  currentGame    CurrentGame[]
+
+  @@map("games")
+}
+
+model ScoreFragment {
+  id        String    @id @default(nanoid(12))
+  time      Int
+  scoreType String    @map("score_type")
+  redFluc   Int       @map("red_fluc")
+  blueFluc  Int       @map("blue_fluc")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  gameId    String    @map("game_id")
+  team      TeamColor
+  game      Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@map("score_fragments")
+}
+
+model League {
+  id          String   @id @default(nanoid(12))
+  leagueName  String
+  leagueOrder Int
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  gameId      String?  @map("game_id")
+  game        Game?    @relation(fields: [gameId], references: [id])
+
+  @@map("leagues")
+}
+
+model Tournament {
+  id        String   @id @default(nanoid(12))
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  gameId    String?  @map("game_id")
+  game      Game?    @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  @@map("tournaments")
+}
+
+model CurrentGame {
+  id        String   @id @default(nanoid(12))
+  createdAt DateTime @default(now()) @map("created_at")
+  gameId    String?  @map("game_id")
+  game      Game?    @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  @@map("current_game")
+}
+
+model Timer {
+  id        String      @id @default(nanoid(12))
+  status    TimerStatus
+  elapsedMs Int         @map("elapsed_ms")
+  resumedAt DateTime?   @map("resumed_at") @db.Timestamptz(3)
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("timer")
+}
+
+model GameState {
+  id        String    @id @default(nanoid(12))
+  gamePhase GamePhase @map("game_phase")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("game_state")
+}

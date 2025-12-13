@@ -1,0 +1,56 @@
+services:
+  frontend:
+    env_file:
+      - ./env/.frontend.env
+    build:
+      context: .
+      dockerfile: ./packages/frontend/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - .:/app
+    networks:
+      - network
+  backend:
+    env_file:
+      - ./env/.backend.env
+    build:
+      context: .
+      dockerfile: ./packages/backend/Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - network
+
+  # from: https://www.prisma.io/docs/guides/docker#32-create-and-configure-a-docker-compose-file 
+  postgres-db:
+    image: postgres:15
+    hostname: postgres-db
+    restart: always
+    env_file:
+      - ./env/.postgres.env
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
+volumes:
+  postgres-data:
+
+networks:
+  network:

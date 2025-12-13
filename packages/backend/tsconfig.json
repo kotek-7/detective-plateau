@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@harurobo-2026-score-tool/shared": ["../../shared/src/index.ts"]
+    },
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["./*.js", "src/**/*.ts", "prettier.config.mjs", "eslint.config.mjs"],
+  "exclude": ["node_modules"],
+  "references": [{ "path": "../shared" }]
+}

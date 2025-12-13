@@ -1,0 +1,7 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.validate": ["json", "jsonc", "json5"],
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+}
