@@ -4,7 +4,7 @@ import { env } from "./env.js";
 import { Server } from "socket.io";
 import { createServer } from "http";
 
-console.log("CORS_ORIGIN:", env.CORS_ORIGIN);
+const allowedOrigins = ["http://localhost:3000"];
 
 const port = env.PORT;
 
@@ -12,7 +12,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
   },
 });
