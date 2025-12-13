@@ -9,7 +9,7 @@ import router from "./routes/index.js";
 import { Server } from "socket.io";
 
 const setupRestApiServer = (app: express.Express, io: Server) => {
-  const allowedOrigins = ["http://localhost:3000", "https://detective-plateau.onrender.com"];
+  const allowedOrigins = ["http://localhost:3000", "https://detective-plateau.pages.dev/"];
 
   app.use(express.json());
   app.use(pinoHttp());

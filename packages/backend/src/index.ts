@@ -4,7 +4,7 @@ import { env } from "./env.js";
 import { Server } from "socket.io";
 import { createServer } from "http";
 
-const allowedOrigins = ["http://localhost:3000", "https://detective-plateau.onrender.com"];
+const allowedOrigins = ["http://localhost:3000", "https://detective-plateau.pages.dev/"];
 
 const port = env.PORT;
 
