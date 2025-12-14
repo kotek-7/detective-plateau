@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,190 +9,217 @@
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.136/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
-    html, body, #cesiumContainer {
-      width: 100%; height: 100%; margin: 0; padding: 0;
+    html,
+    body,
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
     }
+
     #locationBtn {
-      position: absolute; top: 10px; left: 10px; z-index: 999;
-      padding: 12px 20px; font-size: 16px; cursor: pointer;
-      background: #901505; color: white;
-      border: none; border-radius: 8px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #901505;
+      color: white;
+      border: none;
+      border-radius: 8px;
     }
+
     #footer {
-      position: fixed; bottom: 10px; right: 10px; z-index: 999;
-      font-size: 12px; color: #888; text-shadow: 0 0 2px black;
-      background-color: rgba(0, 0, 0, 0.5); padding: 5px 10px;
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 999;
+      font-size: 12px;
+      color: #888;
+      text-shadow: 0 0 2px black;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
       border-radius: 5px;
     }
   </style>
 </head>
+
 <body>
   <div id="cesiumContainer"></div>
   <button id="locationBtn">現在地へ移動</button>
 
-<script type="module">
+  <script type="module">
 
-// ↓ここにトークンを入れる
+    // ↓ここにトークンを入れる
 
-Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmMGY5MjhkYS02M2IxLTQzZGMtOGM4YS1hOTkzZmEyMjJiZDgiLCJpZCI6MzY5NDQxLCJpYXQiOjE3NjU2NDgzODh9.HJe1_XsvK1G59lVTjxI-ow-b9DM2bEhPDzuX7psIk9U";
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmMGY5MjhkYS02M2IxLTQzZGMtOGM4YS1hOTkzZmEyMjJiZDgiLCJpZCI6MzY5NDQxLCJpYXQiOjE3NjU2NDgzODh9.HJe1_XsvK1G59lVTjxI-ow-b9DM2bEhPDzuX7psIk9U";
 
-const viewer = new Cesium.Viewer("cesiumContainer", {
-  terrain: Cesium.Terrain.fromWorldTerrain(),
-  timeline: false, animation: false
-});
-
-// 日本の3D建物を追加
-const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2602291);
-viewer.scene.primitives.add(tileset);
-
-// 初期位置：京都市役所
-viewer.camera.setView({
-  destination: Cesium.Cartesian3.fromDegrees(135.7681, 35.0116, 800),
-  orientation: {
-    heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0
-  }
-});
-
-// 現在地ボタン
-document.getElementById("locationBtn").addEventListener("click", () => {
-  navigator.geolocation.getCurrentPosition((pos) => {
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(
-        pos.coords.longitude, pos.coords.latitude, 500
-      ),
-      duration: 2
+    const viewer = new Cesium.Viewer("cesiumContainer", {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
+      timeline: false, animation: false
     });
-  });
-});
 
-const isProduction = window.location.hostname !== "localhost";
+    // 日本の3D建物を追加
+    const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2602291);
+    viewer.scene.primitives.add(tileset);
 
-// WebSocket 接続
-const socket = io(isProduction ? "https://detective-plateau.onrender.com" : "http://localhost:8080");
-
-// プレイヤーの最終受信時刻を追跡し、一定時間更新がないものを削除する
-const INACTIVE_TIMEOUT_MS = 30_000; // 30秒で切断扱い
-const CHECK_INTERVAL_MS = 5_000; // 監視間隔
-const lastSeenMap = new Map();
-
-// Socket.IO 接続オープン時の処理
-socket.on('connect', () => {
-  console.log('Socket.IO 接続成功');
-});
-
-// Socket.IO メッセージ受信時の処理（座標データをピンとして追加）
-socket.on('coordinateReceived', (latitude, longitude, user, color) => {
-  if (!user) {
-    console.warn('ユーザー未指定の座標を受信したため無視します');
-    return;
-  }
-  lastSeenMap.set(user, Date.now());
-  addPinFromCoordinate(latitude, longitude, user, color);
-});
-
-// Socket.IO エラー時の処理
-socket.on('connect_error', (error) => {
-  console.error('Socket.IO エラー:', error);
-});
-
-// Socket.IO 接続クローズ時の処理
-socket.on('disconnect', () => {
-  console.log('Socket.IO 接続クローズ');
-});
-
-// 座標データを処理して青色のピンを追加する関数（単一座標用）
-function addPinFromCoordinate(latitude, longitude, user, color) {
-  const height = 100;  // 高さデフォルト 100m
-
-  // 既存ピンを削除（同じユーザーで更新）
-  const existingEntity = viewer.entities.getById(`player-pin-${user}`);
-  if (existingEntity) {
-    viewer.entities.remove(existingEntity);
-  }
-
-  const pinColor = Cesium.Color.fromCssColorString(color).withAlpha(0.8);
-
-  // 新しいピンを追加
-  viewer.entities.add({
-    id: `player-pin-${user}`,
-    position: Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
-    point: {
-      pixelSize: 30,
-      color: pinColor,
-      outlineColor: Cesium.Color.CYAN,  // シアンで光る効果
-      outlineWidth: 3
-    },
-    label: {
-      text: `プレイヤー: ${user}`,
-      font: "10pt sans-serif",
-      fillColor: Cesium.Color.WHITE,
-      outlineColor: Cesium.Color.BLACK,
-      outlineWidth: 1,
-      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-      pixelOffset: new Cesium.Cartesian2(0, -40)
-    }
-  });
-}
-
-// イベントデータを処理して赤色のピンを追加する関数
-function addEventPin(event) {
-  const height = 100; // 高さデフォルト 100m
-
-  viewer.entities.add({
-    id: `event-pin-${event.type}-${event.latitude}-${event.longitude}`,
-    position: Cesium.Cartesian3.fromDegrees(event.longitude, event.latitude, height),
-    point: {
-      pixelSize: 24,
-      color: Cesium.Color.RED, // すべて赤色
-      outlineColor: Cesium.Color.DARKRED,
-      outlineWidth: 2
-    },
-    label: {
-      font: "14pt sans-serif",
-      fillColor: Cesium.Color.WHITE,
-      outlineColor: Cesium.Color.BLACK,
-      outlineWidth: 2,
-      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-      pixelOffset: new Cesium.Cartesian2(0, -32)
-    }
-  });
-}
-
-// ページロード時にイベントデータを取得してピンを表示
-fetch('http://localhost:8080/api/v1/events') // /api プレフィックスを使用
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(events => {
-    events.forEach(event => {
-      addEventPin(event);
+    // 初期位置：京都市役所
+    viewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(135.7681, 35.0116, 800),
+      orientation: {
+        heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0
+      }
     });
-    console.log('イベントピンを' + events.length + '個表示しました。');
-  })
-  .catch(error => {
-    console.error('イベントデータの取得に失敗しました:', error);
-  });
 
-// 一定時間更新がないプレイヤーのピンを削除
-setInterval(() => {
-  const now = Date.now();
-  for (const [user, lastSeen] of lastSeenMap.entries()) {
-    if (now - lastSeen > INACTIVE_TIMEOUT_MS) {
-      viewer.entities.removeById(`player-pin-${user}`);
-      lastSeenMap.delete(user);
-      console.log(`プレイヤー ${user} をタイムアウトにより削除しました`);
+    // 現在地ボタン
+    document.getElementById("locationBtn").addEventListener("click", () => {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(
+            pos.coords.longitude, pos.coords.latitude, 500
+          ),
+          duration: 2
+        });
+      });
+    });
+
+    const isProduction = window.location.hostname !== "localhost";
+
+    // WebSocket 接続
+    const socket = io(isProduction ? "https://detective-plateau.onrender.com" : "http://localhost:8080");
+
+    // プレイヤーの最終受信時刻を追跡し、一定時間更新がないものを削除する
+    const INACTIVE_TIMEOUT_MS = 30_000; // 30秒で切断扱い
+    const CHECK_INTERVAL_MS = 5_000; // 監視間隔
+    const lastSeenMap = new Map();
+
+    // Socket.IO 接続オープン時の処理
+    socket.on('connect', () => {
+      console.log('Socket.IO 接続成功');
+    });
+
+    // Socket.IO メッセージ受信時の処理（座標データをピンとして追加）
+    socket.on('coordinateReceived', (latitude, longitude, user, color) => {
+      if (!user) {
+        console.warn('ユーザー未指定の座標を受信したため無視します');
+        return;
+      }
+      lastSeenMap.set(user, Date.now());
+      addPinFromCoordinate(latitude, longitude, user, color);
+    });
+
+    // Socket.IO エラー時の処理
+    socket.on('connect_error', (error) => {
+      console.error('Socket.IO エラー:', error);
+    });
+
+    // Socket.IO 接続クローズ時の処理
+    socket.on('disconnect', () => {
+      console.log('Socket.IO 接続クローズ');
+    });
+
+    // 座標データを処理して青色のピンを追加する関数（単一座標用）
+    function addPinFromCoordinate(latitude, longitude, user, color) {
+      const height = 100;  // 高さデフォルト 100m
+
+      // 既存ピンを削除（同じユーザーで更新）
+      const existingEntity = viewer.entities.getById(`player-pin-${user}`);
+      if (existingEntity) {
+        viewer.entities.remove(existingEntity);
+      }
+
+      const pinColor = color ? Cesium.Color.fromCssColorString(color) : Cesium.Color.fromRandom({
+        minimumRed: 0.75,
+        minimumGreen: 0.75,
+        minimumBlue: 0.75,
+        alpha: 1.0
+      });
+
+      // 新しいピンを追加
+      viewer.entities.add({
+        id: `player-pin-${user}`,
+        position: Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
+        point: {
+          pixelSize: 30,
+          color: pinColor.withAlpha(0.8),
+          outlineColor: pinColor,  // シアンで光る効果
+          outlineWidth: 3
+        },
+        label: {
+          text: `プレイヤー: ${user}`,
+          font: "10pt sans-serif",
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 1,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -40)
+        }
+      });
     }
-  }
-}, CHECK_INTERVAL_MS);
+
+    // イベントデータを処理して赤色のピンを追加する関数
+    function addEventPin(event) {
+      const height = 100; // 高さデフォルト 100m
+
+      viewer.entities.add({
+        id: `event-pin-${event.type}-${event.latitude}-${event.longitude}`,
+        position: Cesium.Cartesian3.fromDegrees(event.longitude, event.latitude, height),
+        point: {
+          pixelSize: 24,
+          color: Cesium.Color.RED, // すべて赤色
+          outlineColor: Cesium.Color.DARKRED,
+          outlineWidth: 2
+        },
+        label: {
+          font: "14pt sans-serif",
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -32)
+        }
+      });
+    }
+
+    // ページロード時にイベントデータを取得してピンを表示
+    fetch('http://localhost:8080/api/v1/events') // /api プレフィックスを使用
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(events => {
+        events.forEach(event => {
+          addEventPin(event);
+        });
+        console.log('イベントピンを' + events.length + '個表示しました。');
+      })
+      .catch(error => {
+        console.error('イベントデータの取得に失敗しました:', error);
+      });
+
+    // 一定時間更新がないプレイヤーのピンを削除
+    setInterval(() => {
+      const now = Date.now();
+      for (const [user, lastSeen] of lastSeenMap.entries()) {
+        if (now - lastSeen > INACTIVE_TIMEOUT_MS) {
+          viewer.entities.removeById(`player-pin-${user}`);
+          lastSeenMap.delete(user);
+          console.log(`プレイヤー ${user} をタイムアウトにより削除しました`);
+        }
+      }
+    }, CHECK_INTERVAL_MS);
 
 
-</script>
+  </script>
 
 </body>
-<div id="footer">Web Services by Yahoo! JAPAN （<a href="https://developer.yahoo.co.jp/sitemap/" target="_blank">https://developer.yahoo.co.jp/sitemap/</a>）</div>
+<div id="footer">Web Services by Yahoo! JAPAN （<a href="https://developer.yahoo.co.jp/sitemap/"
+    target="_blank">https://developer.yahoo.co.jp/sitemap/</a>）</div>
 
 </html>
