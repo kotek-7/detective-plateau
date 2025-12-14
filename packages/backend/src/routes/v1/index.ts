@@ -33,13 +33,13 @@ router.get('/search', async (req, res) => {
     // 2. Define the template with placeholders
     const eventTemplate = [
       // { type: "footprints", latitude: 35.0150, longitude: 135.7720, message: "古い足跡" },
-      { type: "hint", latitude: "代入", longitude: "代入", message: "ヒント1" },
+      { type: "goal", latitude: "代入", longitude: "代入", message: "ヒント1" },
       { type: "hint", latitude: "代入", longitude: "代入", message: "ヒント2" },
       { type: "hint", latitude: "代入", longitude: "代入", message: "ヒント3" },
       { type: "hint", latitude: "代入", longitude: "代入", message: "ヒント4" },
-      { type: "human", latitude: "代入", longitude: "代入", message: "犯人はこっち" },
+      { type: "hint", latitude: "代入", longitude: "代入", message: "犯人はこっち" },
       { type: "human", latitude: "代入", longitude: "代入", message: "犯人はこっちに来ていない" },
-      { type: "goal", latitude: "代入", longitude: "代入", message: "ゴール" },
+      { type: "human", latitude: "代入", longitude: "代入", message: "ゴール" },
     ];
 
     // 3. Fill the placeholders with search results
