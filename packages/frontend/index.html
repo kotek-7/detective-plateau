@@ -69,8 +69,8 @@ socket.on('connect', () => {
 });
 
 // Socket.IO メッセージ受信時の処理（座標データをピンとして追加）
-socket.on('coordinateReceived', (latitude, longitude, user) => {
-  addPinFromCoordinate(latitude, longitude, user);
+socket.on('coordinateReceived', (latitude, longitude, user, color) => {
+  addPinFromCoordinate(latitude, longitude, user, color);
 });
 
 // Socket.IO エラー時の処理
@@ -84,7 +84,7 @@ socket.on('disconnect', () => {
 });
 
 // 座標データを処理して青色のピンを追加する関数（単一座標用）
-function addPinFromCoordinate(latitude, longitude, user) {
+function addPinFromCoordinate(latitude, longitude, user, color) {
   const height = 100;  // 高さデフォルト 100m
 
   // 既存ピンを削除（同じユーザーで更新）
@@ -93,13 +93,15 @@ function addPinFromCoordinate(latitude, longitude, user) {
     viewer.entities.remove(existingEntity);
   }
 
+  const pinColor = Cesium.Color.fromCssColorString(color).withAlpha(0.8);
+
   // 新しいピンを追加
   viewer.entities.add({
     id: `player-pin-${user}`,
     position: Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
     point: {
       pixelSize: 30,
-      color: Cesium.Color.BLUE.withAlpha(0.8),  // 青色、透明度で淡く
+      color: pinColor,
       outlineColor: Cesium.Color.CYAN,  // シアンで光る効果
       outlineWidth: 3
     },

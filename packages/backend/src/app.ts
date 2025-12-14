@@ -24,7 +24,7 @@ const setupRestApiServer = (app: express.Express, io: Server) => {
 
   // WebSocket ブロードキャスト用の座標投稿エンドポイント
   app.post("/api/coordinate", (req, res) => {
-    io.emit("coordinateReceived", req.body.latitude, req.body.longitude, req.body.user);
+    io.emit("coordinateReceived", req.body.latitude, req.body.longitude, req.body.user, req.body.color);
     res.status(204).send();
   });
 
