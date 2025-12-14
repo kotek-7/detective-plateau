@@ -131,12 +131,7 @@
         viewer.entities.remove(existingEntity);
       }
 
-      const pinColor = color ? Cesium.Color.fromCssColorString(color) : Cesium.Color.fromRandom({
-        minimumRed: 0.75,
-        minimumGreen: 0.75,
-        minimumBlue: 0.75,
-        alpha: 1.0
-      });
+      const pinColor = color ? Cesium.Color.fromCssColorString(color) : Cesium.Color.fromHsl(Math.random(), 1, 0.5, 1);
 
       // 新しいピンを追加
       viewer.entities.add({
