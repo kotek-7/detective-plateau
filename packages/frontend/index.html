@@ -17,6 +17,12 @@
       background: #4CAF50; color: white;
       border: none; border-radius: 8px;
     }
+    #footer {
+      position: fixed; bottom: 10px; right: 10px; z-index: 999;
+      font-size: 12px; color: #888; text-shadow: 0 0 2px black;
+      background-color: rgba(0, 0, 0, 0.5); padding: 5px 10px;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -162,5 +168,6 @@ fetch('http://localhost:8080/api/v1/events') // /api プレフィックスを使
 </script>
 
 </body>
+<div id="footer">Web Services by Yahoo! JAPAN （<a href="https://developer.yahoo.co.jp/sitemap/" target="_blank">https://developer.yahoo.co.jp/sitemap/</a>）</div>
 
 </html>
